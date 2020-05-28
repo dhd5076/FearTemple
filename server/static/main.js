@@ -57,10 +57,7 @@ function create()
   this.add.text(800 - (256 - 32), 14, "Player 1", {fontSize: 24});
   this.add.text(800 - (256 - 32), 40, "Choosing A Card", {fontSize: 12});
 
-  this.add.rectangle(12 + (cardWidth / 2), 600 - (300 + (12 * 2)), cardWidth, cardHeight, 0x00bbbb00);
-  this.add.rectangle(12 + (cardWidth / 2) + ((cardWidth + cardMargin) * 1), 600 - (300 + (12 * 2)), cardWidth, cardHeight, 0x00bbbb00);
-  this.add.rectangle(12 + (cardWidth / 2) + ((cardWidth + cardMargin) * 2), 600 - (300 + (12 * 2)), cardWidth, cardHeight, 0x00bbbb00);
-  this.add.rectangle(12 + (cardWidth / 2) + ((cardWidth + cardMargin) * 3), 600 - (300 + (12 * 2)), cardWidth, cardHeight, 0x00bbbb00);
+  new Card().draw();
 
   this.add.rectangle(12 + 75, 500 - 12, 150, 200, 0x0000bb00);
 
@@ -69,4 +66,26 @@ function create()
 
 function update() {
 
+}
+
+class Card {
+  constructor() {
+
+  }
+
+  draw() {
+    this.add.rectangle(12 + (cardWidth / 2), 600 - (300 + (12 * 2)), cardWidth, cardHeight, 0x00bbbb00);
+  }
+}
+
+class Game {
+  constructor() {
+
+  }
+}
+
+class Player {
+  constructor() {
+
+  }
 }
