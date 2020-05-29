@@ -1,5 +1,5 @@
 /**
- * @file Handles Current Players
+ * @file Player Class
  * @author Dylan Dunn
  */
 
@@ -67,4 +67,4 @@ class Player {
     }
 }
 
-module.exports = GameModel;
+module.exports = Player;

@@ -1,10 +1,11 @@
 /**
- * @file GameModel Object Class
+ * @file Game Class
  * @author Dylan Dunn
  */
 
 const uuid = require('uuid');
 const Player = require('./Player.js');
+const io = require('socket.io');
 
 /** Represents a single instance of a fear temple game */
  class Game {
@@ -12,18 +13,27 @@ const Player = require('./Player.js');
      * Create a new game
      */
     constructor() {
-    this.players = [];
-    this.id = uuid();
-    this.currentCount = 0;
+        this.players = [];
+        this.id = uuid();
+        this.currentCount = 0;
     }
     
     /**
      * Starts the game
      */
-    startGame() {
+    start() {
         this.players.forEach((player, index) => {
             player.setRole(Player.Role.Guardian);
         });
+
+        setInterval(sendGameData)
+    }
+
+    /**
+     * Sends game data to connected clients
+     */
+    sendGameData() {
+        io.in(this.getID(), this);
     }
 
     /**
@@ -31,6 +41,10 @@ const Player = require('./Player.js');
      */
     endRound() {
 
+    }
+
+    removePlayer(username) {
+        throw new Error("Not Implemented");
     }
 
     /**
@@ -46,7 +60,7 @@ const Player = require('./Player.js');
      * @returns {String}
      */
     getID() {
-    return this.id;
+        return this.id;
     }
 
     /**
@@ -58,4 +72,4 @@ const Player = require('./Player.js');
     }
  }
 
- module.exports = GameModel;
+ module.exports = Game;

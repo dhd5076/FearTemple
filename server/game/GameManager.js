@@ -1,24 +1,40 @@
 /**
- * @file Mananges current game instances
+ * @file GameManager Class
  * @author Dylan Dunn
  */
-const Game = require('./Game');
 
-/**
- * Manages a set of games
- */
+const uuid = require('uuid');
+const Game = require('./Game');
+const Player = require('./Player.js');
+
+/** Represents a single instance of a fear temple game */
  class GameManager {
+    /**
+     * Create a new game
+     */
     constructor() {
         this.games = []
     }
 
-    /**
-     *  Create a new game and add it to manager
-     * @returns {String} the gameID
-     */
+    handleConnection(socket) {
+        socket.on('createGame', function() {
+            socket.emit('gameCreated', {gameID : GameManager.createGame()})
+        })
+
+        socket.on('startGame', function(gameID) {
+            games.array.forEach(game => {
+                if(game.id == gameID) {
+                    game.start();
+                }
+            });
+        });
+    }
+
     createGame() {
         var game = new Game();
         this.games.push(game);
-        return game.getID();
+        return game.id;
     }
  }
+
+ module.exports = GameManager;
