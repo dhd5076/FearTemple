@@ -1,0 +1,8 @@
+.gbg {
+  background: linear-gradient( rgba(0, 0, 0, .9), rgba(0, 0, 0, 1) ), url('/wall.png');
+  font-family: 'Permanent Marker', cursive;
+}
+
+.modal-body {
+  font-family: 'Permanent Marker', cursive;
+}
