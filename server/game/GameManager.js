@@ -18,7 +18,13 @@ const Player = require('./Player.js');
 
     handleConnection(socket) {
         socket.on('createGame', function() {
-            socket.emit('gameCreated', {gameID : GameManager.createGame()})
+            var gameID = GameManager.createGame()
+            socket.emit('gameCreated', {gameID : gameID})
+            socket.join(gameID);
+        });
+
+        socket.on('joinGame', function(gameID) {
+            socket.join(gameID);
         })
 
         socket.on('startGame', function(gameID) {

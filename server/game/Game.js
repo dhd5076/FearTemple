@@ -26,7 +26,7 @@ const io = require('socket.io');
             player.setRole(Player.Role.Guardian);
         });
 
-        setInterval(sendGameData)
+        setInterval(sendGameData, 1000)
     }
 
     /**
