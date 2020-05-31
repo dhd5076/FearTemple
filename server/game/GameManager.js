@@ -3,7 +3,6 @@
  * @author Dylan Dunn
  */
 
-const { v4: uuid } = require('uuid');
 const Game = require('./Game');
 const Player = require('./Player.js');
 
@@ -30,7 +29,9 @@ const Player = require('./Player.js');
         })
 
         socket.on('start', function(data) {
-            gmInstance.games[data.gameID].start();
+            gmInstance.games[data.gameID].start(() => {
+                gmInstance.games[data.gameID].sendClientsUpdatedGameDataAndOtherSyncingStuff(gmInstance.io); //Hot Potato
+            });
         });
         
         socket.on('disconnect', function() {
@@ -52,21 +53,23 @@ const Player = require('./Player.js');
         this.games[gameID].sendClientsUpdatedGameDataAndOtherSyncingStuff(this.io); //Passing IO around like a hot potato
        } catch {
            console.log("Some idiot joined a game that doesn't exist, carry on"); //Should probably tell the client what happened
+           socket.emit("oops", "That game ID does not exist!"); //Because 'error' is reserved, hence 10 minutes of time wasted debugging
        }
     }
 
     //Create game and add it to list of current games
     createGame(adminUsername, socket) {
         console.log("Creating game....");
-        var game = new Game();
+        var game = new Game(adminUsername, this.io); //Potato
         var gameID = game.getID();
         this.games[gameID] = game;
         console.log("Game created with ID: " + gameID);
 
-        var adminPlayer = new Player(true, adminUsername, socket.id);
-        game.addPlayer(adminPlayer);
-        socket.join(game.id);
-        game.sendClientsUpdatedGameDataAndOtherSyncingStuff(this.io); //Hot POtAto hOt poTAto
+        socket.join(game.id, () => {
+            var adminPlayer = new Player(true, adminUsername, socket.id);
+            game.addPlayer(adminPlayer); //Nested to prevent occasional sync errors where data is sent back incomplete
+            game.sendClientsUpdatedGameDataAndOtherSyncingStuff(this.io); //Hot POtAto hOt poTAto
+        });
         return gameID;
     }
  }

@@ -12,18 +12,29 @@ const Player = require('./Player.js');
     /**
      * Create a new game
      */
-    constructor() {
+    constructor(username, io) {
         this.players = [];
         this.id = idGen({length: 4});
+        this.adminPlayer = username;
         this.round = 0;
+        this.isStarted = false;
         this.currentCount = 0;
+        this.message = "Waiting for " + username + " to start the game...";
+
+        setInterval(() => {
+            this.sendClientsUpdatedGameDataAndOtherSyncingStuff(io);
+        }, 500)
     }
     
     /**
      * Starts the game
      */
-    start() {
+    start(cb) {
         console.log("Game " + this.id + " Started.")
+        this.isStarted = true;
+        this.players[0].role = "gold";
+        this.message = "Waiting for " + this.adminPlayer + " to play a card";
+        cb();
     }
 
     /**
@@ -60,7 +71,8 @@ const Player = require('./Player.js');
                 fire: 0,
                 gold: 0,
                 empty: 0
-            }
+            },
+            message : this.message
         });
     }
  }

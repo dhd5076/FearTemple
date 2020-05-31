@@ -24,6 +24,7 @@ class Game extends React.Component {
 
     this.state = {
       playerName: '',
+      role: 'null', //IN hindsight calling it null might cause headaches in the future
       playerHand: {
         fire: 0,
         gold: 0,
@@ -38,7 +39,8 @@ class Game extends React.Component {
           fire: 0,
           gold: 0,
           empty: 0
-        }
+        },
+        message: 'Waiting...'
       }
     }
   }
@@ -46,14 +48,26 @@ class Game extends React.Component {
   componentDidMount() {
     console.log("Game Client Loaded");
     socket.on("update", gameData => {
-      this.setState({gameData : gameData})
       console.log(gameData);
+      gameData.players.forEach(player => {
+        if(player.name.toString() === this.state.playerName.toString()) {
+          this.setState({
+            role : player.role,
+            gameData : gameData
+          });
+        }
+      });
+    });
+
+    socket.on("oops", (message) => { //Something went wrong, 'error' is reserved by socket.io
+      alert(message);
+      window.location.reload(); //Easiest way, probably should be changed to something smoother
     });
   }
 
   joinGame() {
     var username = document.getElementById("username").value
-    document.getElementById("startButton").disabled=true
+    document.getElementById("startButton").remove();
     var gameID = document.getElementById("gameID").value
     socket.emit('joinGame', {
       username: username,
@@ -68,6 +82,7 @@ class Game extends React.Component {
 
   startGame() {
     socket.emit('start', { gameID:  this.state.gameData.id});
+    document.getElementById("startButton").remove();
   }
 
   render() {
@@ -80,7 +95,7 @@ class Game extends React.Component {
         </span>
         <Row>
           <div className="col-9">
-            <GameCard type="hunter"/>
+            <GameCard type={this.state.role}/>
             <CurrentRound 
               fire={this.state.gameData.playedCards.fire}
               gold={this.state.gameData.playedCards.gold}
@@ -97,6 +112,9 @@ class Game extends React.Component {
             {}
             <button id="startButton" type="button" className="mt-4 col-12 btn btn-lg btn-success" onClick={this.startGame}> Start Game</button>
           </div>
+        </Row>
+        <Row className="col-12 d-flex justify-content-center text-white mt-4">
+          <h3> {this.state.gameData.message} </h3>
         </Row>
       <LoadModal playerName={this.state.playerName} joinGameHandler={this.joinGame} createGameHandler={this.createGame}/>
       </Container> 
