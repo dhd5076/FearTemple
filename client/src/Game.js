@@ -9,22 +9,33 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
+import {Howl, Howler} from 'howler';
 import IO from "socket.io-client";
 const ENDPOINT = "http://localhost:7001"
 
 const socket = IO(ENDPOINT);
 
 class Game extends React.Component {
-
-
   constructor(props) {
     super(props);
 
     this.startGame = this.startGame.bind(this);
+    this.createGame = this.createGame.bind(this); 
+    this.joinGame = this.joinGame.bind(this);
+    this.onPlayerJoinGame = this.onPlayerJoinGame.bind(this); 
+    this.playCard = this.playCard.bind(this); 
 
     this.state = {
+      menuSound : new Howl({
+        src: ['menu.mp3'],
+        volume: 0.5
+      }),
+      gameplaySound : new Howl({
+        src: ['gameplay.mp3'],
+        volume: 0.5
+      }),
       playerName: '',
-      role: 'null', //IN hindsight calling it null might cause headaches in the future
+      role: 'null', //In hindsight calling it null might cause headaches in the future
       playerHand: {
         fire: 0,
         gold: 0,
@@ -32,7 +43,7 @@ class Game extends React.Component {
       },
       isAdmin: false,
       gameData: {
-        id: '',
+        id: 'GAME ID',
         round: 0,
         players: [],
         playedCards: {
@@ -43,16 +54,17 @@ class Game extends React.Component {
         message: 'Waiting...'
       }
     }
+    this.state.menuSound.play();
   }
 
   componentDidMount() {
     console.log("Game Client Loaded");
     socket.on("update", gameData => {
-      console.log(gameData);
       gameData.players.forEach(player => {
         if(player.name.toString() === this.state.playerName.toString()) {
           this.setState({
-            role : player.role
+            role : player.role,
+            playerHand: player.hand
           });
         }
       });
@@ -68,24 +80,61 @@ class Game extends React.Component {
     });
   }
 
+  playSoundEffect(name) {
+    new Howl({
+      src: [name + '.mp3'],
+      volume: 0.5
+    }).play();
+
+
+  }
+
+  onPlayerJoinGame() {
+    this.state.menuSound.fade(0.5, 0, 2500);
+    this.playSoundEffect('join');
+    this.state.gameplaySound.play();
+    this.state.gameplaySound.fade(0, 0.05, 10000);
+  }
+
   joinGame() {
     var username = document.getElementById("username").value
     document.getElementById("startButton").remove();
+    this.setState({
+      playerName: username
+    });
     var gameID = document.getElementById("gameID").value
     socket.emit('joinGame', {
       username: username,
       gameID: gameID
     });
+    this.onPlayerJoinGame();
   }
 
+  //Sends command to server to create a new game
   createGame() {
     var username = document.getElementById("username").value
+    this.setState({
+      playerName: username
+    });
+    this.playerName = username;
     socket.emit('createGame', username);
+    this.onPlayerJoinGame();
   } 
 
+  //Sends command to server to start a new game
   startGame() {
-    socket.emit('start', { gameID:  this.state.gameData.id});
     document.getElementById("startButton").remove();
+    socket.emit('start', { 
+      gameID:  this.state.gameData.id
+    });
+  }
+
+  //Sends command to server to play a card
+  playCard() {
+    socket.emit('playCard', { 
+      gameID: this.state.gameData.id,
+      username: this.playerName
+    });
   }
 
   render() {
@@ -93,7 +142,10 @@ class Game extends React.Component {
       <Container  className="gbg p-4 m-2 bg-light col-12 text-info">
         <span className="justify-content-between d-flex">
           <h1 className="text-white mb-4"> Temple Of Fear</h1>
-          <h3 style={{fontFamily: "consolas"}}> Game ID: {this.state.gameData.id} </h3>
+          <h2 className = "p-4 text-dark bg-light font-weight-bold" 
+              style={{borderRadius: "12px", fontFamily: "consolas"}}> 
+              {this.state.gameData.id} 
+          </h2>
           <h1 className="text-white mb-4"> Round {this.state.gameData.round}</h1>
         </span>
         <Row>
@@ -110,14 +162,13 @@ class Game extends React.Component {
           </div>
           <div className="col-3">
             <PlayersList players={this.state.gameData.players}/>
-            <button type="button" className="mt-2 btn btn-sm btn-primary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
+            <button type="button" className="mt-2 btn btn-sm btn-secondary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
             <div height="500px"/>
             {}
+            <button id="playCardButton" type="button" className="mb-4 mt-4 float-right col-12 btn btn-lg btn-primary" onClick={this.playCard}> Play Card </button>
             <button id="startButton" type="button" className="mt-4 col-12 btn btn-lg btn-success" onClick={this.startGame}> Start Game</button>
+            <h5 className="mt-4 text-white"> {this.state.gameData.message} </h5>
           </div>
-        </Row>
-        <Row className="col-12 d-flex justify-content-center text-white mt-4">
-          <h3> {this.state.gameData.message} </h3>
         </Row>
       <LoadModal playerName={this.state.playerName} joinGameHandler={this.joinGame} createGameHandler={this.createGame}/>
       </Container> 
@@ -201,9 +252,9 @@ class PlayerHand extends React.Component {
       <Container className="p-0 ml-0 mt-4">
         <h4> Your Hand</h4>
         <Row>
-          <GameCard type="gold" value={this.props.gold.toString()} isButton={true}/>
-          <GameCard type="fire" value={this.props.fire.toString()} isButton={true}/>
-          <GameCard type="empty" value={this.props.empty.toString()} isButton={true}/>
+          <GameCard type="gold" value={this.props.gold.toString()} isButton={false}/>
+          <GameCard type="fire" value={this.props.fire.toString()} isButton={false}/>
+          <GameCard type="empty" value={this.props.empty.toString()} isButton={false}/>
         </Row>
       </Container>
     )

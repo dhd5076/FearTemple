@@ -4,7 +4,7 @@
  */
 
 const { v4: uuid } = require('uuid'); // Too long, but might use later with shorter reference to it
-const idGen = require('random-string');
+const idGen = require('randomstring');
 const Player = require('./Player.js');
 
 /** Represents a single instance of a fear temple game */
@@ -14,7 +14,12 @@ const Player = require('./Player.js');
      */
     constructor(username, io) {
         this.players = [];
-        this.id = idGen({length: 4});
+        this.io = io;
+        this.id = idGen.generate({
+            length: 4,
+            readable: true,
+            charset: 'BDFGHJKLMSTVX'
+        });
         this.adminPlayer = username;
         this.round = 0;
         this.isStarted = false;
@@ -32,7 +37,7 @@ const Player = require('./Player.js');
     start(cb) {
         console.log("Game " + this.id + " Started.")
         this.isStarted = true;
-        this.players[0].role = "gold";
+        this.players[0].role = "guard";
         this.message = "Waiting for " + this.adminPlayer + " to play a card";
         cb();
     }
@@ -51,6 +56,11 @@ const Player = require('./Player.js');
      */
     addPlayer(player) {
         this.players.push(player);
+
+        this.io.sockets.connected[player.socket].on("playCard", () => { // yep
+            console.log(player.name + " asked to play a card");
+            this.message = player.name + " played a card"
+        });
     }
 
     /**
@@ -62,7 +72,7 @@ const Player = require('./Player.js');
     }
 
     sendClientsUpdatedGameDataAndOtherSyncingStuff(io) { //Naming :)
-        console.log("Sending game id " + this.id + " data to " + this.players.length + " clients");
+        //console.log("Sending game id " + this.id + " data to " + this.players.length + " clients");
         io.sockets.in(this.id).emit('update', {
             id: this.id,
             round: this.round,
