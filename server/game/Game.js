@@ -23,25 +23,7 @@ const Player = require('./Player.js');
      * Starts the game
      */
     start() {
-        this.players.forEach((player, index) => {
-            player.setRole(Player.Role.Guardian);
-        });
-
-        setInterval(sendGameData, 1000)
-    }
-
-    /**
-     * Sends game data to connected clients
-     */
-    sendGameData() {
-        io.in(this.getID(), this);
-    }
-
-    /**
-     * End the current round
-     */
-    endRound() {
-        throw new Error("Not Implemented");
+        console.log("Game " + this.id + " Started.")
     }
 
     /**

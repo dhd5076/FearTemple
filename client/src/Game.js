@@ -16,8 +16,12 @@ const socket = IO(ENDPOINT);
 
 class Game extends React.Component {
 
+
   constructor(props) {
     super(props);
+
+    this.startGame = this.startGame.bind(this);
+
     this.state = {
       playerName: '',
       playerHand: {
@@ -49,6 +53,7 @@ class Game extends React.Component {
 
   joinGame() {
     var username = document.getElementById("username").value
+    document.getElementById("startButton").disabled=true
     var gameID = document.getElementById("gameID").value
     socket.emit('joinGame', {
       username: username,
@@ -60,6 +65,10 @@ class Game extends React.Component {
     var username = document.getElementById("username").value
     socket.emit('createGame', username);
   } 
+
+  startGame() {
+    socket.emit('start', { gameID:  this.state.gameData.id});
+  }
 
   render() {
     return(
@@ -86,7 +95,7 @@ class Game extends React.Component {
             <button type="button" className="mt-2 btn btn-sm btn-primary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
             <div height="500px"/>
             {}
-            <button id="startButton" type="button" className="mt-4 col-12 btn btn-lg btn-success" onClick={this.props.onStart}> Start Game</button>
+            <button id="startButton" type="button" className="mt-4 col-12 btn btn-lg btn-success" onClick={this.startGame}> Start Game</button>
           </div>
         </Row>
       <LoadModal playerName={this.state.playerName} joinGameHandler={this.joinGame} createGameHandler={this.createGame}/>
