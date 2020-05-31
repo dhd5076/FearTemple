@@ -25,6 +25,7 @@ const Player = require('./Player.js');
         this.isStarted = false;
         this.currentCount = 0;
         this.message = "Waiting for " + username + " to start the game...";
+        this.currentPlayer = ""
 
         setInterval(() => {
             this.sendClientsUpdatedGameDataAndOtherSyncingStuff(io);
@@ -38,6 +39,7 @@ const Player = require('./Player.js');
         console.log("Game " + this.id + " Started.")
         this.isStarted = true;
         this.players[0].role = "guard";
+        this.currentPlayer = this.players[0].name
         this.message = "Waiting for " + this.adminPlayer + " to play a card";
         cb();
     }
@@ -57,9 +59,16 @@ const Player = require('./Player.js');
     addPlayer(player) {
         this.players.push(player);
 
+        //Handle playCard command
         this.io.sockets.connected[player.socket].on("playCard", () => { // yep
             console.log(player.name + " asked to play a card");
             this.message = player.name + " played a card"
+        });
+
+        //Handle choosePlayer command
+        this.io.sockets.connected[player.socket].on("choosePlayer", (username) => { // yep
+            this.currentPlayer = username;
+            console.log(player.name + " choose " + username + " as the new keyholder");
         });
     }
 
@@ -77,6 +86,7 @@ const Player = require('./Player.js');
             id: this.id,
             round: this.round,
             players: this.players,
+            currentPlayer : this.currentPlayer, 
             playedCards: {
                 fire: 0,
                 gold: 0,

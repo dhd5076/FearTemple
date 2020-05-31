@@ -30,6 +30,7 @@ class Game extends React.Component {
         src: ['menu.mp3'],
         volume: 0.5
       }),
+      currentPlayer: '',
       gameplaySound : new Howl({
         src: ['gameplay.mp3'],
         volume: 0.5
@@ -83,7 +84,7 @@ class Game extends React.Component {
   playSoundEffect(name) {
     new Howl({
       src: [name + '.mp3'],
-      volume: 0.5
+      volume: 0.25
     }).play();
 
 
@@ -94,9 +95,44 @@ class Game extends React.Component {
     this.playSoundEffect('join');
     this.state.gameplaySound.play();
     this.state.gameplaySound.fade(0, 0.05, 10000);
+
+    document.getElementById("playCardButton").addEventListener("mouseover", () => {
+      this.playSoundEffect("hover");
+    });
+    if(this.state.isAdmin) {
+      document.getElementById("startButton").addEventListener("mouseover", () => {
+        this.playSoundEffect("hover");
+      });
+    }
+    document.getElementById("playCardButton").addEventListener("mouseover", () => {
+      this.playSoundEffect("hover");
+    });
+    document.getElementById("toggleMusicButton").addEventListener("mouseover", () => {
+      this.playSoundEffect("hover");
+    });
+
+
+    document.getElementById("toggleMusicButton").addEventListener("click", () => {
+      this.playSoundEffect("click");
+      if(this.state.gameplaySound == null) {
+        this.setState({
+          gameplaySound : new Howl({
+            src: ['gameplay.mp3'],
+            volume: 0.1
+          })
+        });
+        this.state.gameplaySound.play();
+      } else {
+        this.state.gameplaySound.stop();
+        this.setState({
+          gameplaySound : null
+        })
+      }
+    });
   }
 
   joinGame() {
+    this.playSoundEffect("click");
     var username = document.getElementById("username").value
     document.getElementById("startButton").remove();
     this.setState({
@@ -112,6 +148,7 @@ class Game extends React.Component {
 
   //Sends command to server to create a new game
   createGame() {
+    this.playSoundEffect("click");
     var username = document.getElementById("username").value
     this.setState({
       playerName: username
@@ -123,6 +160,7 @@ class Game extends React.Component {
 
   //Sends command to server to start a new game
   startGame() {
+    this.playSoundEffect("click");
     document.getElementById("startButton").remove();
     socket.emit('start', { 
       gameID:  this.state.gameData.id
@@ -131,10 +169,16 @@ class Game extends React.Component {
 
   //Sends command to server to play a card
   playCard() {
+    this.playSoundEffect("click");
     socket.emit('playCard', { 
       gameID: this.state.gameData.id,
       username: this.playerName
     });
+  }
+
+  //Send command to server choosing next player
+  choosePlayer(username) {
+    socket.emit('choosePlayer', username);
   }
 
   render() {
@@ -161,8 +205,12 @@ class Game extends React.Component {
             empty={this.state.playerHand.empty} />
           </div>
           <div className="col-3">
-            <PlayersList players={this.state.gameData.players}/>
-            <button type="button" className="mt-2 btn btn-sm btn-secondary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
+            <PlayersList 
+              players={this.state.gameData.players} 
+              playerName={this.state.playerName}
+              isCurrentPlayer={this.state.playerName === this.state.gameData.currentPlayer}
+              choosePlayer={this.choosePlayer} />
+            <button type="button" id="toggleMusicButton" className="mt-2 btn btn-sm btn-secondary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
             <div height="500px"/>
             {}
             <button id="playCardButton" type="button" className="mb-4 mt-4 float-right col-12 btn btn-lg btn-primary" onClick={this.playCard}> Play Card </button>
@@ -278,6 +326,7 @@ class CurrentRound extends React.Component {
 }
 
 class GameCard extends React.Component {
+
   render() {
     return(
       //Horrific way to hide the card object behind the card images
@@ -311,7 +360,13 @@ class PlayersList extends React.Component {
     return(
       <ListGroup>
         {this.props.players.map((player, i) => {
-          return <Player key={i} username={player.name} hasKeyCard={player.hasKey}/>
+          return <Player 
+            key={i} 
+            username={player.name} 
+            isPlayer={player.name === this.props.playerName}
+            hasKey={player.hasKey} 
+            isCurrentPlayer={this.props.isCurrentPlayer}
+            choosePlayer={this.props.choosePlayer} />
         })}
       </ListGroup>
     )
@@ -322,13 +377,28 @@ class PlayersList extends React.Component {
 class Player extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
-    }
+
+    this.onClick = this.onClick.bind(this);
+  }
+
+  onHover() {
+    new Howl({
+      src: ['hover.mp3'],
+      volume: 0.25
+    }).play();
+  }
+
+  onClick() {
+    new Howl({
+      src: ['click.mp3'],
+      volume: 0.25
+    }).play();
+    this.props.choosePlayer(this.props.username);
   }
 
   render() {
     return(
-      <ListGroup.Item action variant={this.props.isPlayer ? ("success") : ("info")} className="text-right">
+      <ListGroup.Item onMouseOver={this.onHover} onClick={this.onClick} action variant={this.props.isPlayer ? ("success") : ("info")} disabled={this.props.isPlayer | !this.props.isCurrentPlayer} className="text-right">
         <h4> 
           {this.props.username + ' '}
           {this.props.hasKeyCard ? (
@@ -341,6 +411,5 @@ class Player extends React.Component {
     )
   }
 }
-
 
 export default Game;
