@@ -62,7 +62,7 @@ const Player = require('./Player.js');
     }
 
     sendClientsUpdatedGameDataAndOtherSyncingStuff(io) { //Naming :)
-        console.log("Sending game id  " + this.id + " data to " + this.players.length + " clients");
+        console.log("Sending game id " + this.id + " data to " + this.players.length + " clients");
         io.sockets.in(this.id).emit('update', {
             id: this.id,
             round: this.round,

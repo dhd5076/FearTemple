@@ -52,11 +52,14 @@ class Game extends React.Component {
       gameData.players.forEach(player => {
         if(player.name.toString() === this.state.playerName.toString()) {
           this.setState({
-            role : player.role,
-            gameData : gameData
+            role : player.role
           });
         }
       });
+
+      this.setState({
+          gameData : gameData
+        });
     });
 
     socket.on("oops", (message) => { //Something went wrong, 'error' is reserved by socket.io

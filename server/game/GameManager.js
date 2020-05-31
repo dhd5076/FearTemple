@@ -49,7 +49,11 @@ const Player = require('./Player.js');
         */
        try {
         this.games[gameID].addPlayer(newPlayer);
-        socket.join(gameID);
+        if(!this.games[gameID].isStarted) { //Don't let players join mid-game
+            socket.join(gameID);
+        } else {
+            socket.emit("oops", "That game has already started!")
+        }
         this.games[gameID].sendClientsUpdatedGameDataAndOtherSyncingStuff(this.io); //Passing IO around like a hot potato
        } catch {
            console.log("Some idiot joined a game that doesn't exist, carry on"); //Should probably tell the client what happened
