@@ -9,61 +9,19 @@
  * @param {Socket} socket The socket object the player is connected to
  */
 class Player {
-    constructor(name, socket) {
+    constructor(isAdmin, name, socket) {
+
+    this.isAdmin = isAdmin;
     this.name = name;
     this.socket = socket;
 
     this.isKeyPlayer;
-    this.roleCard = Role.Unassigned;
-    this.hand = [];
-    }
-
-    /**
-     * Get the name of the player
-     * @returns {String} The player's name
-     */
-    getName() {
-        return this.name;
-    }
-
-    /**
-     * Get Hand
-     * @returns {String[]}
-     */
-    getHand() {
-        return this.hand;
-    }
-
-    /**
-     * Set the player's hand
-     * @param {String[]} hand 
-     */
-    clearHand(hand) {
-        this.hand = hand;
-    }
-
-    /**
-     * Set the player's role card
-     * @param {Role} roleCard
-     */
-    setRole(roleCard) {
-        this.roleCard = roleCard;
-    }
-
-    /**
-     * Get the player's role card
-     */
-    getRole() {
-        return this.roleCard;
-    }
-
-    /**
-     * Possible player roles
-     */
-    static Role = {
-        Guardian: "Guardian",
-        Adventurer: "Adventurer",
-        Unassigned: "Unassigned"
+    this.role = "unassigned";
+    this.hand = {
+        fire : 0,
+        gold : 0,
+        empty : 0
+        }
     }
 }
 

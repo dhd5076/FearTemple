@@ -3,9 +3,9 @@
  * @author Dylan Dunn
  */
 
-const uuid = require('uuid');
+const { v4: uuid } = require('uuid'); // Too long, but might use later with shorter reference to it
+const idGen = require('random-string');
 const Player = require('./Player.js');
-const io = require('socket.io');
 
 /** Represents a single instance of a fear temple game */
  class Game {
@@ -14,7 +14,8 @@ const io = require('socket.io');
      */
     constructor() {
         this.players = [];
-        this.id = uuid();
+        this.id = idGen({length: 4});
+        this.round = 0;
         this.currentCount = 0;
     }
     
@@ -40,9 +41,13 @@ const io = require('socket.io');
      * End the current round
      */
     endRound() {
-
+        throw new Error("Not Implemented");
     }
 
+    /**
+     * 
+     * @param {String} username 
+     */
     removePlayer(username) {
         throw new Error("Not Implemented");
     }
@@ -63,12 +68,18 @@ const io = require('socket.io');
         return this.id;
     }
 
-    /**
-     * Get all players in the game
-     * @returns {Player[]}
-     */
-    getPlayers() {
-        return this.players;
+    sendClientsUpdatedGameDataAndOtherSyncingStuff(io) { //Naming :)
+        console.log("Sending game id  " + this.id + " data to " + this.players.length + " clients");
+        io.sockets.in(this.id).emit('update', {
+            id: this.id,
+            round: this.round,
+            players: this.players,
+            playedCards: {
+                fire: 0,
+                gold: 0,
+                empty: 0
+            }
+        });
     }
  }
 

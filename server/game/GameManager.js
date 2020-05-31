@@ -3,7 +3,7 @@
  * @author Dylan Dunn
  */
 
-const uuid = require('uuid');
+const { v4: uuid } = require('uuid');
 const Game = require('./Game');
 const Player = require('./Player.js');
 
@@ -12,34 +12,53 @@ const Player = require('./Player.js');
     /**
      * Create a new game
      */
-    constructor() {
-        this.games = []
+    constructor(io) {
+        this.games = {}
+        this.io = io;
     }
 
+    //Handles incoming clients
     handleConnection(socket) {
-        socket.on('createGame', function() {
-            var gameID = GameManager.createGame()
-            socket.emit('gameCreated', {gameID : gameID})
-            socket.join(gameID);
+        var gmInstance = this;
+        var socketUsername;
+        socket.on('createGame', function(username) {
+            gmInstance.createGame(username, socket);
         });
 
-        socket.on('joinGame', function(gameID) {
-            socket.join(gameID);
+        socket.on('joinGame', function(data) {
+            gmInstance.joinGame(data.username, data.gameID, socket);
         })
 
-        socket.on('startGame', function(gameID) {
-            games.array.forEach(game => {
-                if(game.id == gameID) {
-                    game.start();
-                }
-            });
+        socket.on('start', function(gameID) {
+            this.games[gameID].start();
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Client with username: ' + socketUsername + " disconnected :("); // We lost 'em
         });
     }
 
-    createGame() {
+    joinGame(username, gameID, socket) {
+        var newPlayer = new Player(false, username, socket.id);
+
+        this.games[gameID].addPlayer(newPlayer);
+        socket.join(gameID);1
+        this.games[gameID].sendClientsUpdatedGameDataAndOtherSyncingStuff(this.io); //Passing IO around like a hot potato
+    }
+
+    //Create game and add it to list of current games
+    createGame(adminUsername, socket) {
+        console.log("Creating game....");
         var game = new Game();
-        this.games.push(game);
-        return game.id;
+        var gameID = game.getID();
+        this.games[gameID] = game;
+        console.log("Game created with ID: " + gameID);
+
+        var adminPlayer = new Player(true, adminUsername, socket.id);
+        game.addPlayer(adminPlayer);
+        socket.join(game.id);
+        game.sendClientsUpdatedGameDataAndOtherSyncingStuff(this.io); //Hot POtAto hOt poTAto
+        return gameID;
     }
  }
 

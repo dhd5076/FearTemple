@@ -9,66 +9,159 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
+import IO from "socket.io-client";
+const ENDPOINT = "http://localhost:7001"
+
+const socket = IO(ENDPOINT);
 
 class Game extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      playerName: '',
+      playerHand: {
+        fire: 0,
+        gold: 0,
+        empty: 0
+      },
+      isAdmin: false,
+      gameData: {
+        id: '',
+        round: 0,
+        players: [],
+        playedCards: {
+          fire: 0,
+          gold: 0,
+          empty: 0
+        }
+      }
+    }
+  }
+
+  componentDidMount() {
+    console.log("Game Client Loaded");
+    socket.on("update", gameData => {
+      this.setState({gameData : gameData})
+      console.log(gameData);
+    });
+  }
+
+  joinGame() {
+    var username = document.getElementById("username").value
+    var gameID = document.getElementById("gameID").value
+    socket.emit('joinGame', {
+      username: username,
+      gameID: gameID
+    });
+  }
+
+  createGame() {
+    var username = document.getElementById("username").value
+    socket.emit('createGame', username);
+  } 
+
   render() {
     return(
       <Container  className="gbg p-4 m-2 bg-light col-12 text-info">
         <span className="justify-content-between d-flex">
           <h1 className="text-white mb-4"> Temple Of Fear</h1>
-          <h1 className="text-white mb-4"> Round 1</h1>
+          <h3 style={{fontFamily: "consolas"}}> Game ID: {this.state.gameData.id} </h3>
+          <h1 className="text-white mb-4"> Round {this.state.gameData.round}</h1>
         </span>
         <Row>
           <div className="col-9">
             <GameCard type="hunter"/>
-            <CurrentRound />
-            <PlayerHand />
+            <CurrentRound 
+              fire={this.state.gameData.playedCards.fire}
+              gold={this.state.gameData.playedCards.gold}
+              empty={this.state.gameData.playedCards.empty} />
+            <PlayerHand 
+            fire={this.state.playerHand.fire}
+            gold={this.state.playerHand.gold}
+            empty={this.state.playerHand.empty} />
           </div>
           <div className="col-3">
-            <PlayersList />
-            <button type="button" className="mt-2 btn btn-primary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
+            <PlayersList players={this.state.gameData.players}/>
+            <button type="button" className="mt-2 btn btn-sm btn-primary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
+            <div height="500px"/>
+            {}
+            <button id="startButton" type="button" className="mt-4 col-12 btn btn-lg btn-success" onClick={this.props.onStart}> Start Game</button>
           </div>
         </Row>
-      <LoadModal />
+      <LoadModal playerName={this.state.playerName} joinGameHandler={this.joinGame} createGameHandler={this.createGame}/>
       </Container> 
     )
   }
 }
 
-//Handles showing and dismissing the join game modal
-function LoadModal(props) {
+//Shows the modal at the beginning with options to create or join a game
+class LoadModal extends React.Component{
+  constructor(props) {
+    super(props);
 
-  const [show, setShow] = React.useState(true); //Sorta Mess
+    this.state = {
+      show: true,
+      joinGameHandler : this.props.joinGameHandler,
+      createGameHandler : this.props.createGameHandler
+    }
 
-  const closeThis = () => setShow(false); //Mess
-
-  const handleClose = function() {
-    closeThis(); //Bigger Mess
+    /* Won't work without this because ES6 overwrites 'this' to the current scope, big dumb
+    This took 2 days to figure out, this is the hackier but easier to read version as opposed 
+    to the dumpster fire that is arrow functions, i.e joinGame = () => { none; }, like huh??? */ 
+    this.joinGame = this.joinGame.bind(this); //Use this this not that this or your this
+    this.createGame = this.createGame.bind(this); //Use this this and not that this or your this
+  }
+  
+  joinGame() {
+    this.state.joinGameHandler();
+    this.setState(state => ({
+      show: false
+    }));
   }
 
-  return (
-    <Modal
-      {...props}
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
-      show={show}
-    >
-      <Modal.Body>
-        <h4>Join Game</h4>
-        <InputGroup className="mt-4">
-          <InputGroup.Prepend>
-            <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
-          </InputGroup.Prepend>
-          <FormControl className="col-12"
-            placeholder="Username"
-          />
-        </InputGroup>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button id="joinGameButton" onClick={handleClose}>Join Game</Button>
-      </Modal.Footer>
-    </Modal>
-  );
+  createGame() {
+    this.state.createGameHandler();
+    this.setState(state => ({
+      show: false
+    }));
+  }
+
+  render() {
+      return (
+      <Modal
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        show={this.state.show}
+      >
+        <Modal.Body>
+          <h4>Join Or Create Game</h4>
+          <InputGroup className="mt-4">
+            <InputGroup.Prepend>
+              <InputGroup.Text>@</InputGroup.Text>
+            </InputGroup.Prepend>
+            <FormControl className="col-12"
+              placeholder="Username" id="username"
+            />
+          </InputGroup>
+          <InputGroup className="mt-4">
+            <InputGroup.Prepend>
+              <InputGroup.Text>ID</InputGroup.Text>
+            </InputGroup.Prepend>
+            <FormControl className="col-12"
+              placeholder="Game ID (If joining a game)" id="gameID"
+            />
+          </InputGroup>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="success" id="createGameButton" 
+            onClick={this.createGame}>Create New Game</Button>
+          <Button id="joinGameButton"
+            onClick={this.joinGame}>Join Game</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
 }
 
 //The cards in the players hand
@@ -78,9 +171,9 @@ class PlayerHand extends React.Component {
       <Container className="p-0 ml-0 mt-4">
         <h4> Your Hand</h4>
         <Row>
-          <GameCard type="gold" value={1} isButton={true}/>
-          <GameCard type="fire" value={8} isButton={true}/>
-          <GameCard type="empty" value={1} isButton={true}/>
+          <GameCard type="gold" value={this.props.gold.toString()} isButton={true}/>
+          <GameCard type="fire" value={this.props.fire.toString()} isButton={true}/>
+          <GameCard type="empty" value={this.props.empty.toString()} isButton={true}/>
         </Row>
       </Container>
     )
@@ -94,9 +187,9 @@ class CurrentRound extends React.Component {
       <Container className="p-0 ml-0 mt-4">
         <h4> Current Round</h4>
         <Row>
-          <GameCard type="gold" value={1} />
-          <GameCard type="fire"value={2}/>
-          <GameCard type="empty" value={3}/>
+          <GameCard type="gold" value={this.props.gold.toString()} />
+          <GameCard type="fire" value={this.props.fire.toString()}/>
+          <GameCard type="empty" value={this.props.empty.toString()}/>
         </Row>
       </Container>
     )
@@ -108,7 +201,7 @@ class GameCard extends React.Component {
     return(
       //Horrific way to hide the card object behind the card images
       <Card className="m-2 text-dark rounded" style={{maxHeight:'20rem', maxWidth: '200px', backgroundColor: 'rgba(255, 255, 255, 0.0)'}}>
-        <Card.Img className="rounded" variant="top" style={{height: '20rem' }} src={"http://localhost/static/" + this.props.type  + ".png"}/>
+        <Card.Img className="rounded" variant="top" style={{height: '20rem' }} src={"/" + this.props.type  + ".png"}/>
         <Card.ImgOverlay>
           <Card.Title className="text-white"> 
             {this.props.value ? (
@@ -136,9 +229,9 @@ class PlayersList extends React.Component {
   render() {
     return(
       <ListGroup>
-        <Player username="SaladLover69" isPlayer={true}/>
-        <Player username="Dylan" hasKeyCard={true}/>
-        <Player username="Sad Player"/>
+        {this.props.players.map((player, i) => {
+          return <Player key={i} username={player.name} hasKeyCard={player.hasKey}/>
+        })}
       </ListGroup>
     )
   }
