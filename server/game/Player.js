@@ -14,6 +14,7 @@ class Player {
     this.isAdmin = isAdmin;
     this.name = name;
     this.socket = socket;
+    this.isCurrentPlayer = false;
     this.hasKey
     this.role = "null";
     this.hand = {

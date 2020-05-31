@@ -9,7 +9,7 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
-import {Howl, Howler} from 'howler';
+import {Howl} from 'howler';
 import IO from "socket.io-client";
 const ENDPOINT = "http://localhost:7001"
 
@@ -24,13 +24,13 @@ class Game extends React.Component {
     this.joinGame = this.joinGame.bind(this);
     this.onPlayerJoinGame = this.onPlayerJoinGame.bind(this); 
     this.playCard = this.playCard.bind(this); 
+    this.choosePlayer = this.choosePlayer.bind(this); 
 
     this.state = {
       menuSound : new Howl({
         src: ['menu.mp3'],
         volume: 0.5
       }),
-      currentPlayer: '',
       gameplaySound : new Howl({
         src: ['gameplay.mp3'],
         volume: 0.5
@@ -179,6 +179,7 @@ class Game extends React.Component {
   //Send command to server choosing next player
   choosePlayer(username) {
     socket.emit('choosePlayer', username);
+    this.forceUpdate();
   }
 
   render() {
@@ -208,7 +209,6 @@ class Game extends React.Component {
             <PlayersList 
               players={this.state.gameData.players} 
               playerName={this.state.playerName}
-              isCurrentPlayer={this.state.playerName === this.state.gameData.currentPlayer}
               choosePlayer={this.choosePlayer} />
             <button type="button" id="toggleMusicButton" className="mt-2 btn btn-sm btn-secondary"> Toggle Music</button> { /* Because the bootstrap-react one is broken */ }
             <div height="500px"/>
@@ -365,7 +365,7 @@ class PlayersList extends React.Component {
             username={player.name} 
             isPlayer={player.name === this.props.playerName}
             hasKey={player.hasKey} 
-            isCurrentPlayer={this.props.isCurrentPlayer}
+            isCurrentPlayer={player.isCurrentPlayer}
             choosePlayer={this.props.choosePlayer} />
         })}
       </ListGroup>
@@ -378,11 +378,15 @@ class Player extends React.Component {
   constructor(props) {
     super(props)
 
+    this.state = {
+      disabled: !this.props.player.isCurrentPlayer & !this.props.isPlayer
+    }
+
     this.onClick = this.onClick.bind(this);
   }
 
   onHover() {
-    new Howl({
+    new Howl({ //What do you mean I should have a SoundManager class???
       src: ['hover.mp3'],
       volume: 0.25
     }).play();
@@ -390,15 +394,18 @@ class Player extends React.Component {
 
   onClick() {
     new Howl({
-      src: ['click.mp3'],
+      src: ['click.mp3'], //I think it's fine how it is, lol
       volume: 0.25
     }).play();
     this.props.choosePlayer(this.props.username);
+    this.forceUpdate();
   }
 
   render() {
     return(
-      <ListGroup.Item onMouseOver={this.onHover} onClick={this.onClick} action variant={this.props.isPlayer ? ("success") : ("info")} disabled={this.props.isPlayer | !this.props.isCurrentPlayer} className="text-right">
+      //This darn thing wont update state unless clicked off of. Can lead to double clicks on the same player by accident.
+      //Not sure exactly what the issue is, everything else refreshes and its also force updated on top of that so IDK...
+      <ListGroup.Item onMouseOver={this.onHover} onClick={this.onClick} action variant={this.props.isPlayer ? ("success") : ("info")} disabled={this.state.disabled} className="text-right">
         <h4> 
           {this.props.username + ' '}
           {this.props.hasKeyCard ? (
