@@ -27,14 +27,16 @@ const Player = require('./Player.js');
         }
         this.adminPlayer = username;
         this.round = 0;
+        this.goldLeft = 0;
+        this.fireLeft = 0;
         this.cardPlayed = false;
         this.totalCardCount = 0;
         this.isStarted = false;
         this.currentCount = 0;
-        this.mostRecentCard = '';
+        this.mostRecentCard = 'n/a';
         this.message = "Waiting for " + username + " to start the game...";
         
-        this.turnsLeftInRound;
+        this.turnsLeftInRound = 0;
 
         //players, advents, guards | advant gardes?? 
         this.roleDistribution = [
@@ -73,7 +75,6 @@ const Player = require('./Player.js');
      * Starts the game
      */
     start(cb) {
-        console.log("Game " + this.id + " Started.")
         this.isStarted = true;
         this.players[0].isCurrentPlayer = true;
 
@@ -209,6 +210,8 @@ const Player = require('./Player.js');
         io.sockets.in(this.id).emit('update', {
             id: this.id,
             round: this.round,
+            goldLeft : this.goldLeft,
+            fireLeft : this.fireLeft,
             mostRecentCard: this.mostRecentCard,
             players: this.players,
             currentPlayer : this.currentPlayer,

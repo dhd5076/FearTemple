@@ -44,9 +44,12 @@ class Game extends React.Component {
       },
       isAdmin: false,
       gameData: {
-        mostRecentCard: '',
+        mostRecentCard: 'n/a',
         id: 'GAME ID',
         round: 0,
+        goldLeft: 0,
+        turnsLeftInRound: 0,
+        fireLeft: 0,
         players: [],
         playedCards: {
           fire: 0,
@@ -93,6 +96,7 @@ class Game extends React.Component {
   }
 
   onPlayerJoinGame() {
+    //Music transition after joining a game
     this.state.menuSound.fade(0.5, 0, 2500);
     this.playSoundEffect('join');
     this.state.gameplaySound.play();
@@ -101,10 +105,12 @@ class Game extends React.Component {
     document.getElementById("playCardButton").addEventListener("mouseover", () => {
       this.playSoundEffect("hover");
     });
-    if(this.state.isAdmin) {
+    try { //Prevents timing issue where startButton might get removed before this is called
       document.getElementById("startButton").addEventListener("mouseover", () => {
         this.playSoundEffect("hover");
       });
+    } catch {
+      
     }
     document.getElementById("playCardButton").addEventListener("mouseover", () => {
       this.playSoundEffect("hover");
@@ -113,7 +119,7 @@ class Game extends React.Component {
       this.playSoundEffect("hover");
     });
 
-
+    //Handles toggle music button
     document.getElementById("toggleMusicButton").addEventListener("click", () => {
       this.playSoundEffect("click");
       if(this.state.gameplaySound == null) {
@@ -153,6 +159,7 @@ class Game extends React.Component {
     this.playSoundEffect("click");
     var username = document.getElementById("username").value
     this.setState({
+      isAdmin: true,
       playerName: username
     });
     this.playerName = username;
@@ -219,10 +226,10 @@ class Game extends React.Component {
             <button id="startButton" type="button" className="mt-4 col-12 btn btn-lg btn-success" onClick={this.startGame}> Start Game</button>
             <h5 className="mt-4 text-white mb-4"> {this.state.gameData.message} </h5>
             <h2>Game Info</h2>
-            <h4 className="text-white"> Most Recent Card Played: {this.state.gameData.mostRecentCard}</h4>
+            <h4 className="text-white"> Last Card: {this.state.gameData.mostRecentCard}</h4>
             <h4 className="text-white"> Passes Left: {this.state.gameData.turnsLeftInRound}</h4>
-            <h4 className="text-white"> Gold Left: </h4>
-            <h4 className="text-white"> Fire Left: </h4>
+            <h4 className="text-white"> Gold Left: {this.state.gameData.goldLeft}</h4>
+            <h4 className="text-white"> Fire Left: {this.state.gameData.fireLeft}</h4>
           </div>
         </Row>
       <LoadModal playerName={this.state.playerName} joinGameHandler={this.joinGame} createGameHandler={this.createGame}/>
