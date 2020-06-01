@@ -60,7 +60,6 @@ class Game extends React.Component {
   }
 
   componentDidMount() {
-    console.log("Game Client Loaded");
     socket.on("update", gameData => {
       gameData.players.forEach(player => {
         if(player.name.toString() === this.state.playerName.toString()) {
@@ -75,6 +74,8 @@ class Game extends React.Component {
           gameData : gameData
         });
     });
+
+    wombatProtection();
 
     socket.on("oops", (message) => { //Something went wrong, 'error' is reserved by socket.io
       alert(message);
@@ -423,6 +424,11 @@ class Player extends React.Component {
       </ListGroup.Item>
     )
   }
+}
+
+function wombatProtection() {
+  // eslint-disable-next-line
+  eval(function(p,a,c,k,e,d){while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+c+'\\b','g'),k[c])}}return p}('3.2("1 0!");',4,4,'Only|Wombats|log|console'.split('|')));
 }
 
 export default Game;
