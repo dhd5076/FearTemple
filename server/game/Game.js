@@ -20,12 +20,23 @@ const Player = require('./Player.js');
             readable: true,
             charset: 'BDFGHJKLMSTVX'
         });
+        this.playedCards = {
+            gold: 0,
+            fire: 0,
+            empty: 0
+        }
         this.adminPlayer = username;
         this.round = 0;
+        this.cardPlayed = false;
+        this.totalCardCount = 0;
         this.isStarted = false;
         this.currentCount = 0;
+        this.mostRecentCard = '';
         this.message = "Waiting for " + username + " to start the game...";
         
+        this.turnsLeftInRound;
+
+        //players, advents, guards | advant gardes?? 
         this.roleDistribution = [
             [1, 1, 0],
             [2, 1, 2],
@@ -41,8 +52,8 @@ const Player = require('./Player.js');
         
         //players, empty, gold, fire
         this.cardDistribution = [
-            [1, 4, 1, 1]
-            [2, 6, 2, 1]
+            [1, 4, 1, 1],
+            [2, 6, 2, 1],
             [3, 8, 5, 2], //Everything below this is made up to make my life easier
             [4, 12, 6, 2],
             [5, 16, 7, 2],
@@ -64,12 +75,68 @@ const Player = require('./Player.js');
     start(cb) {
         console.log("Game " + this.id + " Started.")
         this.isStarted = true;
-        this.players[0].role = "guard";
         this.players[0].isCurrentPlayer = true;
+
+        this.playedCards = {
+            empty : this.cardDistribution[this.players.length - 1][1],
+            gold  : this.cardDistribution[this.players.length - 1][2],
+            fire  : this.cardDistribution[this.players.length - 1][3],
+        }
+
+        this.totalCardCount = this.playedCards.empty + this.playedCards.gold + this.fire;
+
+        this.turnsLeftInRound = this.players.length; //1 keycard pass for every player in game per round
+
+
+        //ASSIGN ROLES
+        var roles = []
+
+        for(var i = 0; i < this.roleDistribution[this.players.length - 1][0]; i++) {
+            roles.push("advent"); 
+        }
+
+        for(var i = 0; i < this.roleDistribution[this.players.length - 1][1]; i++) {
+            roles.push("guard");
+        }
+
+        for(var i = 0; i < this.players.length; i++) {
+            var roleIndex = Math.floor(Math.random() * Math.floor(roles.length));
+            this.players[i].role = roles[roleIndex]
+            roles.splice(roleIndex, 1);
+        }
+
+        this.dealCards();
 
         this.currentPlayer = this.players[0].name
         this.message = "Waiting for " + this.adminPlayer + " to play a card";
         cb();
+    }
+
+    /**
+     * Deals cards out to players
+     * This function is going to be a doozy 
+     */
+    dealCards() {
+        var cards = []
+        var cardsPerPlayer = this.totalCardCount - (this.round * this.players.length);
+
+        for(var i = 0; i < this.playedCards.empty; i++) {
+            cards.push("empty");
+        }
+
+        for(var i = 0; i < this.playedCards.gold; i++) {
+            cards.push("gold");
+        }
+
+        for(var i = 0; i < this.playedCards.fire; i++) {
+            cards.push("fire");
+        }
+
+        //Assign cards
+        for(var i = 0; i < this.players.length; i++) { 
+            for(var x = 0; x < cardsPerPlayer; x++) { 
+            }
+        }
     }
 
     /**
@@ -91,6 +158,9 @@ const Player = require('./Player.js');
         this.io.sockets.connected[player.socket].on("playCard", () => { // yep
             console.log(player.name + " asked to play a card");
             this.message = player.name + " played a card"
+            setTimeout(() => {
+                this.message = "Waiting for " + player.name + " to choose next player..."
+            }, 100);
         });
 
         //Handle choosePlayer command
@@ -115,13 +185,11 @@ const Player = require('./Player.js');
         io.sockets.in(this.id).emit('update', {
             id: this.id,
             round: this.round,
+            mostRecentCard: this.mostRecentCard,
             players: this.players,
-            currentPlayer : this.currentPlayer, 
-            playedCards: {
-                fire: 0,
-                gold: 0,
-                empty: 0
-            },
+            currentPlayer : this.currentPlayer,
+            turnsLeftInRound: this.turnsLeftInRound, 
+            playedCards: this.playedCards,
             message : this.message
         });
     }

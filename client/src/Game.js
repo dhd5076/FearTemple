@@ -11,7 +11,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import {Howl} from 'howler';
 import IO from "socket.io-client";
-const ENDPOINT = "http://localhost:7001"
+const ENDPOINT = "http://192.168.1.167:7001"
 
 const socket = IO(ENDPOINT);
 
@@ -44,6 +44,7 @@ class Game extends React.Component {
       },
       isAdmin: false,
       gameData: {
+        mostRecentCard: '',
         id: 'GAME ID',
         round: 0,
         players: [],
@@ -196,6 +197,8 @@ class Game extends React.Component {
         <Row>
           <div className="col-9">
             <GameCard type={this.state.role}/>
+            <h4 className="text-secondary"> Most Recent Card Played: {this.state.gameData.mostRecentCard}</h4>
+            <h4 className="text-secondary"> Passes Left: {this.state.gameData.turnsLeftInRound}</h4>
             <CurrentRound 
               fire={this.state.gameData.playedCards.fire}
               gold={this.state.gameData.playedCards.gold}
@@ -379,7 +382,7 @@ class Player extends React.Component {
     super(props)
 
     this.state = {
-      disabled: !this.props.player.isCurrentPlayer & !this.props.isPlayer
+      disabled: !this.props.isCurrentPlayer & !this.props.isPlayer
     }
 
     this.onClick = this.onClick.bind(this);
@@ -408,7 +411,7 @@ class Player extends React.Component {
       <ListGroup.Item onMouseOver={this.onHover} onClick={this.onClick} action variant={this.props.isPlayer ? ("success") : ("info")} disabled={this.state.disabled} className="text-right">
         <h4> 
           {this.props.username + ' '}
-          {this.props.hasKeyCard ? (
+          {this.props.hasKey ? (
              <Badge variant="secondary"> Key </Badge>
           ) : (
             null
