@@ -154,6 +154,11 @@ const Player = require('./Player.js');
         }
     }
 
+    nextRound() {
+        this.turnsLeftInRound = this.players.length;
+        this.round++;
+    }
+
     /**
      * 
      * @param {String} username 
@@ -181,9 +186,14 @@ const Player = require('./Player.js');
         //Handle choosePlayer command
         this.io.sockets.connected[player.socket].on("choosePlayer", (username) => { // yep
             this.currentPlayer = username;
-            console.log(player.name + " choose " + username + " as the new keyholder");
             player.isCurrentPlayer = true;
             this.sendClientsUpdatedGameDataAndOtherSyncingStuff(this.io);
+
+            this.turnsLeftInRound--;
+            if(this.turnsLeftInRound == 0) {
+                this.turnsLeftInRound == this.players.length;
+                this.nextRound();
+            }
         });
     }
 

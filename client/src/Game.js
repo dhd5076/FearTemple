@@ -197,8 +197,6 @@ class Game extends React.Component {
         <Row>
           <div className="col-9">
             <GameCard type={this.state.role}/>
-            <h4 className="text-secondary"> Most Recent Card Played: {this.state.gameData.mostRecentCard}</h4>
-            <h4 className="text-secondary"> Passes Left: {this.state.gameData.turnsLeftInRound}</h4>
             <CurrentRound 
               fire={this.state.gameData.playedCards.fire}
               gold={this.state.gameData.playedCards.gold}
@@ -218,7 +216,12 @@ class Game extends React.Component {
             {}
             <button id="playCardButton" type="button" className="mb-4 mt-4 float-right col-12 btn btn-lg btn-primary" onClick={this.playCard}> Play Card </button>
             <button id="startButton" type="button" className="mt-4 col-12 btn btn-lg btn-success" onClick={this.startGame}> Start Game</button>
-            <h5 className="mt-4 text-white"> {this.state.gameData.message} </h5>
+            <h5 className="mt-4 text-white mb-4"> {this.state.gameData.message} </h5>
+            <h2>Game Info</h2>
+            <h4 className="text-white"> Most Recent Card Played: {this.state.gameData.mostRecentCard}</h4>
+            <h4 className="text-white"> Passes Left: {this.state.gameData.turnsLeftInRound}</h4>
+            <h4 className="text-white"> Gold Left: </h4>
+            <h4 className="text-white"> Fire Left: </h4>
           </div>
         </Row>
       <LoadModal playerName={this.state.playerName} joinGameHandler={this.joinGame} createGameHandler={this.createGame}/>
