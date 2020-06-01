@@ -83,7 +83,7 @@ const Player = require('./Player.js');
             fire  : this.cardDistribution[this.players.length - 1][3],
         }
 
-        this.totalCardCount = this.playedCards.empty + this.playedCards.gold + this.fire;
+        this.totalCardCount = this.playedCards.empty + this.playedCards.gold + this.playedCards.fire;
 
         this.turnsLeftInRound = this.players.length; //1 keycard pass for every player in game per round
 
@@ -132,9 +132,24 @@ const Player = require('./Player.js');
             cards.push("fire");
         }
 
+        console.log(this.totalCardCount);
+
         //Assign cards
         for(var i = 0; i < this.players.length; i++) { 
+            console.log("asdasdasd");
             for(var x = 0; x < cardsPerPlayer; x++) { 
+                var cardIndex = Math.floor(Math.random() * Math.floor(cards.length));
+                var card = cards[cardIndex]
+                if(card == "empty") {
+                    this.players[i].hand.empty += 1;
+                }
+                if(card == "gold") {
+                    this.players[i].hand.gold += 1;
+                }
+                if(card == "fire") {
+                    this.players[i].hand.fire += 1;
+                }
+                cards.splice(cardIndex, 1);
             }
         }
     }
@@ -181,7 +196,6 @@ const Player = require('./Player.js');
     }
 
     sendClientsUpdatedGameDataAndOtherSyncingStuff(io) { //Naming :)
-        //console.log("Sending game id " + this.id + " data to " + this.players.length + " clients");
         io.sockets.in(this.id).emit('update', {
             id: this.id,
             round: this.round,

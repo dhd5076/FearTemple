@@ -18,7 +18,7 @@ class Player {
     this.hasKey
     this.role = "null";
     this.hand = {
-        fire : 1,
+        fire : 0,
         gold : 0,
         empty : 0
         }
